@@ -17,9 +17,9 @@ exports.createUser = async (req, res) => {
 exports.getAllUsers = async (req, res) => {
     try {
         const sql = `
-            SELECT u.id, u.full_name, u.email, u.phone, u.country, u.city, a.status 
-            FROM users u 
-            LEFT JOIN applications a ON u.id = a.user_id 
+            SELECT u.id, u.full_name, u.email, u.phone, u.country, u.city, a.status
+            FROM users u
+            LEFT JOIN applications a ON u.id = a.user_id
             WHERE u.role = 'std'
         `;
         const [results] = await db.query(sql);
@@ -79,13 +79,19 @@ exports.deleteUser = async (req, res) => {
     const { id } = req.params;
 
     try {
+        // Supprimer d'abord ses applications
+        await db.query("DELETE FROM applications WHERE user_id = ?", [id]);
+
+        // Puis supprimer l'utilisateur
         await db.query("DELETE FROM users WHERE id = ?", [id]);
-        res.status(200).json({ message: "Utilisateur supprimé" });
+
+        res.status(200).json({ message: "Utilisateur et applications supprimés" });
     } catch (err) {
         console.error("Erreur deleteUser:", err);
         return res.status(500).json({ error: err.message });
     }
 };
+
 
 // PUT /api/users/first-login/:id
 exports.setFirstLoginFalse = async (req, res) => {
